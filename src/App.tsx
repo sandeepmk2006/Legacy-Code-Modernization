@@ -2,10 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Upload, FileCode, ArrowRight, CheckCircle2, Loader2, Download, Settings, Database, Trash2, Github, LogOut, GitPullRequest } from 'lucide-react';
 import Groq from 'groq-sdk';
 import { motion, AnimatePresence } from 'motion/react';
-import { onAuthStateChanged } from 'firebase/auth';
 import ChatBot from './components/ChatBot';
 import LoginPage from './components/LoginPage';
-import { auth, authInitPromise, logoutGoogle } from './firebase';
 
 interface ProjectFile {
   path: string;
@@ -28,36 +26,16 @@ export default function App() {
   const [repoInfo, setRepoInfo] = useState<{ owner: string, repo: string, defaultBranch: string } | null>(null);
   const [isPushing, setIsPushing] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthInitializing, setIsAuthInitializing] = useState(true);
   const [userEmail, setUserEmail] = useState('');
   const [urlError, setUrlError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    let unsubscribe = () => {};
-    let isActive = true;
-
-    authInitPromise.finally(() => {
-      if (!isActive) return;
-
-      unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user?.email) {
-          setUserEmail(user.email);
-          setIsAuthenticated(true);
-          localStorage.setItem('lm_user_email', user.email);
-        } else {
-          setUserEmail('');
-          setIsAuthenticated(false);
-          localStorage.removeItem('lm_user_email');
-        }
-        setIsAuthInitializing(false);
-      });
-    });
-
-    return () => {
-      isActive = false;
-      unsubscribe();
-    };
+    const savedEmail = localStorage.getItem('lm_user_email');
+    if (savedEmail) {
+      setUserEmail(savedEmail);
+      setIsAuthenticated(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -105,8 +83,7 @@ export default function App() {
     localStorage.setItem('lm_user_email', email);
   };
 
-  const handleLogout = async () => {
-    await logoutGoogle();
+  const handleLogout = () => {
     setIsAuthenticated(false);
     setUserEmail('');
     localStorage.removeItem('lm_user_email');
@@ -312,17 +289,6 @@ Return ONLY the source code. No explanations.`;
   const downloadProject = () => {
     window.location.href = `/api/download?lang=${targetLang}`;
   };
-
-  if (isAuthInitializing) {
-    return (
-      <div className="min-h-screen bg-bg text-ink flex items-center justify-center">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <Loader2 size={18} className="animate-spin" />
-          <span>Restoring session...</span>
-        </div>
-      </div>
-    );
-  }
 
   if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, Github, ShieldCheck } from 'lucide-react';
-import { getGoogleRedirectUser, signInWithGoogle } from '../firebase';
+import { signInWithGoogle } from '../firebase';
 
 interface LoginPageProps {
   onLogin: (email: string) => void;
@@ -10,22 +10,6 @@ interface LoginPageProps {
 export default function LoginPage({ onLogin }: LoginPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const completeGoogleRedirect = async () => {
-      try {
-        const user = await getGoogleRedirectUser();
-        if (user?.email) {
-          onLogin(user.email);
-        }
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message || 'Failed to complete Google sign in');
-      }
-    };
-
-    completeGoogleRedirect();
-  }, [onLogin]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -36,7 +20,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       if (user && user.email) {
         onLogin(user.email);
       } else {
-        // Redirect flow navigates away; if navigation is blocked, reset loading
+        setError('Failed to get user email from Google.');
         setIsLoading(false);
       }
     } catch (err: any) {
@@ -113,10 +97,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 )}
               </span>
             </button>
-
-            {error && (
-              <p className="text-sm text-red-400 text-center">{error}</p>
-            )}
           </div>
 
           <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
