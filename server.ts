@@ -11,6 +11,8 @@ import * as dotenv from 'dotenv';
 import admin from 'firebase-admin';
 import { uuid } from 'uuidv4';
 
+dotenv.config();
+
 // Initialize Firebase Admin
 const serviceAccount = {
   type: "service_account",
@@ -26,12 +28,10 @@ const serviceAccount = {
 };
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount)
 });
 
 const db = admin.firestore();
-
-dotenv.config();
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
