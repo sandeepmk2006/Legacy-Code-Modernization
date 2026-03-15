@@ -383,7 +383,7 @@ Return ONLY the source code. No explanations.`;
 
   return (
     <div className="flex h-screen bg-bg text-ink font-sans selection:bg-accent selection:text-ink">
-      <ChatHistory chats={chats} activeChatId={activeChatId} onSelectChat={handleSelectChat} onNewChat={handleNewChat} />
+      <ChatHistory chats={chats} activeChatId={activeChatId} onSelectChat={handleSelectChat} onNewChat={() => handleNewChat(userEmail)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Navigation Rail / Header */}
         <header className="border-b border-ink/10 bg-white/50 backdrop-blur-xl sticky top-0 z-40">
