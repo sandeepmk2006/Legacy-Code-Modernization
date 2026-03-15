@@ -1,0 +1,5 @@
+{
+  "name": "Legacy Modernizer",
+  "description": "A high-performance converter that transforms Java and COBOL source files into modern Python or Go equivalents using AI-driven dependency mapping and pre-processing.",
+  "requestFramePermissions": []
+}
