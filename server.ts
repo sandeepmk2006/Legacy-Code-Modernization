@@ -8,6 +8,28 @@ import { existsSync } from "fs";
 import cookieSession from "cookie-session";
 import { Octokit } from "octokit";
 import * as dotenv from 'dotenv';
+import admin from 'firebase-admin';
+import { uuid } from 'uuidv4';
+
+// Initialize Firebase Admin
+const serviceAccount = {
+  type: "service_account",
+  project_id: process.env.FIREBASE_PROJECT_ID,
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, '\n'),
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID,
+  auth_uri: "https://accounts.google.com/o/oauth2/auth",
+  token_uri: "https://oauth2.googleapis.com/token",
+  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+  client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.FIREBASE_CLIENT_EMAIL?.replace('@', '%40')}`
+};
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
 
 dotenv.config();
 
@@ -78,6 +100,39 @@ async function startServer() {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }));
+
+  // Chat History API
+  app.post('/api/chats', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const newChat = {
+      id: uuid(),
+      name: `Modernization Session - ${new Date().toLocaleString()}`,
+      createdAt: new Date(),
+      files: [],
+      convertedFiles: {},
+      targetLang: 'python'
+    };
+
+    await db.collection('users').doc(email).collection('chats').doc(newChat.id).set(newChat);
+    res.status(201).json(newChat);
+  });
+
+  app.get('/api/chats/:email', async (req, res) => {
+    const { email } = req.params;
+    const chatsRef = db.collection('users').doc(email).collection('chats');
+    const snapshot = await chatsRef.orderBy('createdAt', 'desc').get();
+    const chats = snapshot.docs.map(doc => doc.data());
+    res.json(chats);
+  });
+
+  app.put('/api/chats/:email/:chatId', async (req, res) => {
+    const { email, chatId } = req.params;
+    const updatedData = req.body;
+    await db.collection('users').doc(email).collection('chats').doc(chatId).update(updatedData);
+    res.status(200).json({ message: 'Chat updated' });
+  });
 
   // API routes
   app.post("/api/ingest", upload.array('files'), async (req, res) => {
