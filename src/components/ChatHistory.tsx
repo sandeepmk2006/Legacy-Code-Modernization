@@ -15,26 +15,26 @@ interface ChatHistoryProps {
 
 export default function ChatHistory({ chats, activeChatId, onSelectChat, onNewChat }: ChatHistoryProps) {
   return (
-    <div className="w-64 bg-gray-50 border-r border-ink/10 flex flex-col">
-      <div className="p-4 border-b border-ink/10">
-        <button
-          onClick={onNewChat}
-          className="w-full bg-accent text-ink py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
-        >
-          <Plus size={14} />
-          New Session
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto">
+    <div className="w-64 bg-gray-50 border-r border-ink/10 flex flex-col p-3 gap-2">
+      <button
+        onClick={onNewChat}
+        className="w-full bg-accent text-ink py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
+      >
+        <Plus size={14} />
+        NEW SESSION
+      </button>
+      <div className="flex-1 overflow-y-auto space-y-1 mt-2 custom-scrollbar">
         {chats.map(chat => (
-          <div
+          <button
             key={chat.id}
             onClick={() => onSelectChat(chat.id)}
-            className={`p-4 cursor-pointer text-sm ${activeChatId === chat.id ? 'bg-accent/20' : 'hover:bg-gray-100'}`}
+            className={`w-full text-left px-4 py-3 rounded-lg text-xs font-semibold transition-all flex items-start gap-3 ${
+              activeChatId === chat.id ? 'bg-ink text-bg' : 'hover:bg-ink/5'
+            }`}
           >
-            <p className="font-semibold truncate">{chat.name}</p>
-            <p className="text-xs text-muted truncate">{new Date().toLocaleString()}</p>
-          </div>
+            <MessageSquare size={14} className="mt-0.5 shrink-0" />
+            <span className="truncate">{chat.name}</span>
+          </button>
         ))}
       </div>
     </div>

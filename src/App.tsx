@@ -312,29 +312,47 @@ Return ONLY the source code. No explanations.`;
   };
 
   const fetchChats = async (email: string) => {
-    const res = await fetch(`/api/chats/${email}`);
-    const data = await res.json();
-    setChats(data);
-    if (data.length > 0) {
-      setActiveChatId(data[0].id);
-      setFiles(data[0].files);
-      setTargetLang(data[0].targetLang);
-    } else {
-      handleNewChat();
+    if (!email) return;
+    try {
+      const res = await fetch(`/api/chats/${email}`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      setChats(data);
+      if (data.length > 0) {
+        const latestChat = data[0];
+        setActiveChatId(latestChat.id);
+        setFiles(latestChat.files || []);
+        setTargetLang(latestChat.targetLang || 'python');
+      } else {
+        handleNewChat(email);
+      }
+    } catch (error) {
+      console.error("Failed to fetch chats:", error);
+      // Handle error appropriately, e.g., show a notification
     }
   };
 
-  const handleNewChat = async () => {
-    const res = await fetch('/api/chats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: userEmail }),
-    });
-    const newChat = await res.json();
-    setChats([newChat, ...chats]);
-    setActiveChatId(newChat.id);
-    setFiles([]);
-    setTargetLang('python');
+  const handleNewChat = async (email: string) => {
+    if (!email) return;
+    try {
+      const res = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const newChat = await res.json();
+      setChats([newChat, ...chats]);
+      setActiveChatId(newChat.id);
+      setFiles([]);
+      setTargetLang('python');
+    } catch (error) {
+      console.error("Failed to create new chat:", error);
+    }
   };
 
   const handleSelectChat = (id: string) => {
