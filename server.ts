@@ -101,8 +101,10 @@ async function startServer() {
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }));
 
+  const apiRouter = express.Router();
+
   // Chat History API
-  app.post('/api/chats', async (req, res) => {
+  apiRouter.post('/chats', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
@@ -119,7 +121,7 @@ async function startServer() {
     res.status(201).json(newChat);
   });
 
-  app.get('/api/chats/:email', async (req, res) => {
+  apiRouter.get('/chats/:email', async (req, res) => {
     const { email } = req.params;
     const chatsRef = db.collection('users').doc(email).collection('chats');
     const snapshot = await chatsRef.orderBy('createdAt', 'desc').get();
@@ -127,7 +129,7 @@ async function startServer() {
     res.json(chats);
   });
 
-  app.put('/api/chats/:email/:chatId', async (req, res) => {
+  apiRouter.put('/chats/:email/:chatId', async (req, res) => {
     const { email, chatId } = req.params;
     const updatedData = req.body;
     await db.collection('users').doc(email).collection('chats').doc(chatId).update(updatedData);
@@ -135,7 +137,7 @@ async function startServer() {
   });
 
   // API routes
-  app.post("/api/ingest", upload.array('files'), async (req, res) => {
+  apiRouter.post("/ingest", upload.array('files'), async (req, res) => {
     console.log(`[INGEST] Received request with ${req.files?.length || 0} files`);
     const uploadedFiles = req.files as Express.Multer.File[];
     
@@ -190,13 +192,13 @@ async function startServer() {
     }
   });
 
-  app.post("/api/save-converted", (req, res) => {
+  apiRouter.post("/save-converted", (req, res) => {
     const { path: filePath, content } = req.body;
     convertedProjectFiles.set(filePath, content);
     res.json({ success: true });
   });
 
-  app.get("/api/download", async (req, res) => {
+  apiRouter.get("/download", async (req, res) => {
     const zip = new JSZip();
     const targetLang = req.query.lang || 'python';
 
@@ -219,7 +221,7 @@ async function startServer() {
   });
 
   // GitHub Auth
-  app.get("/api/auth/github/url", (req, res) => {
+  apiRouter.get("/auth/github/url", (req, res) => {
     const client_id = process.env.GITHUB_CLIENT_ID;
     if (!client_id) return res.status(500).json({ error: "GITHUB_CLIENT_ID not configured" });
     
@@ -230,7 +232,7 @@ async function startServer() {
     res.json({ url });
   });
 
-  app.get(["/api/auth/github/callback", "/api/auth/callback/github"], async (req, res) => {
+  apiRouter.get(["/auth/github/callback", "/auth/callback/github"], async (req, res) => {
     const { code } = req.query;
     if (!code) return res.status(400).send("No code provided");
 
@@ -264,17 +266,17 @@ async function startServer() {
     }
   });
 
-  app.get("/api/auth/status", (req, res) => {
+  apiRouter.get("/auth/status", (req, res) => {
     res.json({ authenticated: !!(req.session && req.session.github_token) });
   });
 
-  app.get("/api/auth/logout", (req, res) => {
+  apiRouter.get("/auth/logout", (req, res) => {
     if (req.session) req.session = null;
     res.json({ success: true });
   });
 
   // GitHub Repo Fetch
-  app.post("/api/github/fetch", async (req, res) => {
+  apiRouter.post("/github/fetch", async (req, res) => {
     const { repoUrl } = req.body;
     if (!req.session || !req.session.github_token) {
       return res.status(401).json({ error: "Not authenticated with GitHub" });
@@ -338,7 +340,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/github/push", async (req, res) => {
+  apiRouter.post("/github/push", async (req, res) => {
     const { owner, repo, branch, targetLang } = req.body;
     if (!req.session || !req.session.github_token) {
       return res.status(401).json({ error: "Not authenticated with GitHub" });
@@ -434,6 +436,8 @@ async function startServer() {
       res.status(500).json({ error: "Failed to push to GitHub: " + (error instanceof Error ? error.message : String(error)) });
     }
   });
+
+  app.use('/api', apiRouter);
 
   // Vite middleware
   if (process.env.NODE_ENV !== "production") {
