@@ -299,7 +299,7 @@ Return ONLY the source code. No explanations.`;
     <div className="min-h-screen bg-bg text-ink font-sans selection:bg-accent selection:text-ink">
       {/* Navigation Rail / Header */}
       <header className="border-b border-ink/10 bg-white/50 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-[1600px] mx-auto px-6 h-20 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-8">
             <div>
               <h1 className="text-2xl font-bold tracking-tighter flex items-center gap-2">
@@ -369,7 +369,7 @@ Return ONLY the source code. No explanations.`;
         </div>
       </header>
 
-      <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Workspace */}
         <div className="lg:col-span-8 space-y-6">
           <AnimatePresence mode="wait">
@@ -548,7 +548,7 @@ Return ONLY the source code. No explanations.`;
 
         {/* Right Column: Intelligence & Control */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-ink text-bg p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+          <div className="bg-ink text-bg p-8 rounded-4xl shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-accent/20 transition-all duration-700" />
             
             <h3 className="font-serif italic text-3xl mb-8 leading-tight">Transformation<br/>Intelligence</h3>
@@ -591,14 +591,14 @@ Return ONLY the source code. No explanations.`;
             </div>
           </div>
 
-          <div className="bg-white border border-ink/10 p-8 rounded-[2rem] shadow-sm">
+          <div className="bg-white border border-ink/10 p-8 rounded-4xl shadow-sm">
             <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
               <Settings size={16} className="text-accent" />
               Pipeline Config
             </h3>
             <div className="space-y-6">
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-ink">01</span>
                 </div>
                 <div>
@@ -609,7 +609,7 @@ Return ONLY the source code. No explanations.`;
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-ink">02</span>
                 </div>
                 <div>
@@ -620,7 +620,7 @@ Return ONLY the source code. No explanations.`;
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-ink">03</span>
                 </div>
                 <div>

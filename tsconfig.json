@@ -9,11 +9,13 @@
       "DOM",
       "DOM.Iterable"
     ],
+    "types": ["vite/client"],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
+    "types": ["vite/client"],
     "jsx": "react-jsx",
     "paths": {
       "@/*": [
