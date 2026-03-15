@@ -137,7 +137,8 @@ export default function App() {
       setFiles(data.files.map((f: any) => ({ ...f, status: 'pending' })));
       setRepoInfo(data.repoInfo);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "GitHub fetch failed");
+      const errorMessage = error instanceof Error ? error.message : "GitHub fetch failed";
+      setUrlError(errorMessage);
     } finally {
       setIsIngesting(false);
     }
