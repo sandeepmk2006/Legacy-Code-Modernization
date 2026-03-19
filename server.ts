@@ -81,6 +81,9 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
+  // Trust the Render proxy so secure cookies work properly
+  app.set("trust proxy", 1);
+
   // Request logging middleware & Headers
   app.use((req, res, next) => {
     console.log(`[SERVER] ${req.method} ${req.url}`);
