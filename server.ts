@@ -79,13 +79,13 @@ function scanDependencies(files: { path: string, content: string }[]) {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   // Request logging middleware & Headers
   app.use((req, res, next) => {
     console.log(`[SERVER] ${req.method} ${req.url}`);
     // Allow Firebase/GitHub popups to communicate with the main window
-    res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+    res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
     res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
     next();
   });
@@ -105,12 +105,12 @@ async function startServer() {
 
   // Chat History API
   apiRouter.post('/chats', async (req, res) => {
-    const { email } = req.body;
+    const { email, name } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
     const newChat = {
       id: uuid(),
-      name: `Modernization Session - ${new Date().toLocaleString()}`,
+      name: name || `Modernization Session - ${new Date().toLocaleString()}`,
       createdAt: new Date(),
       files: [],
       convertedFiles: {},
@@ -134,6 +134,16 @@ async function startServer() {
     const updatedData = req.body;
     await db.collection('users').doc(email).collection('chats').doc(chatId).update(updatedData);
     res.status(200).json({ message: 'Chat updated' });
+  });
+
+  apiRouter.delete('/chats/:email/:chatId', async (req, res) => {
+    const { email, chatId } = req.params;
+    try {
+      await db.collection('users').doc(email).collection('chats').doc(chatId).delete();
+      res.status(200).json({ message: 'Chat deleted' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete chat' });
+    }
   });
 
   // API routes
@@ -349,10 +359,28 @@ async function startServer() {
     try {
       const octokit = new Octokit({ auth: req.session.github_token });
       
+      let pushOwner = owner;
+      let pushRepo = repo;
+      let isFork = false;
+
+      // Check if the user has push permissions
+      const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+      
+      if (!repoData.permissions?.push) {
+        console.log(`[GITHUB PUSH] No push access to ${owner}/${repo}. Creating fork...`);
+        const { data: forkData } = await octokit.rest.repos.createFork({ owner, repo });
+        pushOwner = forkData.owner.login;
+        pushRepo = forkData.name;
+        isFork = true;
+        
+        // Wait a few seconds for GitHub to initialize the fork
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+
       // 1. Get the latest commit of the base branch
       const { data: refData } = await octokit.rest.git.getRef({
-        owner,
-        repo,
+        owner: pushOwner,
+        repo: pushRepo,
         ref: `heads/${branch}`,
       });
       const baseSha = refData.object.sha;
@@ -360,8 +388,8 @@ async function startServer() {
       // 2. Create a new branch
       const newBranchName = `modernized-${Date.now()}`;
       await octokit.rest.git.createRef({
-        owner,
-        repo,
+        owner: pushOwner,
+        repo: pushRepo,
         ref: `refs/heads/${newBranchName}`,
         sha: baseSha,
       });
@@ -373,8 +401,8 @@ async function startServer() {
         const newPath = filePath.replace(/\.(java|cbl|cob)$/, ext);
         
         const { data: blobData } = await octokit.rest.git.createBlob({
-          owner,
-          repo,
+          owner: pushOwner,
+          repo: pushRepo,
           content,
           encoding: 'utf-8',
         });
@@ -389,16 +417,16 @@ async function startServer() {
 
       // 4. Create a new tree
       const { data: newTreeData } = await octokit.rest.git.createTree({
-        owner,
-        repo,
+        owner: pushOwner,
+        repo: pushRepo,
         base_tree: baseSha,
         tree: treeItems,
       });
 
       // 5. Create a new commit
       const { data: newCommitData } = await octokit.rest.git.createCommit({
-        owner,
-        repo,
+        owner: pushOwner,
+        repo: pushRepo,
         message: `Modernized legacy code to ${targetLang}`,
         tree: newTreeData.sha,
         parents: [baseSha],
@@ -406,26 +434,20 @@ async function startServer() {
 
       // 6. Update the branch reference
       await octokit.rest.git.updateRef({
-        owner,
-        repo,
+        owner: pushOwner,
+        repo: pushRepo,
         ref: `heads/${newBranchName}`,
         sha: newCommitData.sha,
       });
 
       // 7. Create a Pull Request
-      const { data: prData } = await octokit.rest.issues.create({
-        owner,
-        repo,
-        title: `Modernized Legacy Code (${targetLang})`,
-        body: `This PR contains the modernized version of the legacy code, converted to ${targetLang}.`,
-      });
-      
-      // Wait, issues.create is for issues. For PR:
+      const prHead = isFork ? `${pushOwner}:${newBranchName}` : newBranchName;
+
       const { data: pullData } = await octokit.rest.pulls.create({
         owner,
         repo,
         title: `Modernized Legacy Code (${targetLang})`,
-        head: newBranchName,
+        head: prHead,
         base: branch,
         body: `This PR contains the modernized version of the legacy code, converted to ${targetLang}.`,
       });

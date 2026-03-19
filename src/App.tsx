@@ -334,13 +334,13 @@ Return ONLY the source code. No explanations.`;
     }
   };
 
-  const handleNewChat = async (email: string) => {
+  const handleNewChat = async (email: string, name?: string) => {
     if (!email) return;
     try {
       const res = await fetch('/api/chats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, name }),
       });
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -364,6 +364,38 @@ Return ONLY the source code. No explanations.`;
     }
   };
 
+  const handleEditChat = async (id: string, newName: string) => {
+    try {
+      await fetch(`/api/chats/${userEmail}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      });
+      setChats(chats.map(c => c.id === id ? { ...c, name: newName } : c));
+    } catch (error) {
+      console.error("Failed to update chat name:", error);
+    }
+  };
+
+  const handleDeleteChat = async (id: string) => {
+    try {
+      await fetch(`/api/chats/${userEmail}/${id}`, {
+        method: 'DELETE',
+      });
+      const updatedChats = chats.filter(c => c.id !== id);
+      setChats(updatedChats);
+      if (activeChatId === id) {
+        if (updatedChats.length > 0) {
+          handleSelectChat(updatedChats[0].id);
+        } else {
+          handleNewChat(userEmail);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+    }
+  };
+
   useEffect(() => {
     if (activeChatId && userEmail) {
       const activeChat = chats.find(c => c.id === activeChatId);
@@ -383,7 +415,14 @@ Return ONLY the source code. No explanations.`;
 
   return (
     <div className="flex h-screen bg-bg text-ink font-sans selection:bg-accent selection:text-ink">
-      <ChatHistory chats={chats} activeChatId={activeChatId} onSelectChat={handleSelectChat} onNewChat={() => handleNewChat(userEmail)} />
+      <ChatHistory 
+        chats={chats} 
+        activeChatId={activeChatId} 
+        onSelectChat={handleSelectChat} 
+        onNewChat={(name) => handleNewChat(userEmail, name)}
+        onEditChat={handleEditChat}
+        onDeleteChat={handleDeleteChat}
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Navigation Rail / Header */}
         <header className="border-b border-ink/10 bg-white/50 backdrop-blur-xl sticky top-0 z-40">
