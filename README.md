@@ -24,7 +24,6 @@ This project is a web-based tool for modernizing legacy code (Java, COBOL) into 
 
 - Node.js (v18 or higher)
 - npm
-  
 
 ### Installation
 
