@@ -1,6 +1,6 @@
 # Legacy Code Modernizer
 
-This project is a web-based tool for modernizing legacy code (Java, COBOL) into modern languages like Python and Go. It uses a large language model to perform the code conversion.
+This project is a web-based tool for modernizing legacy code (Java, COBOL) into modern languages like Python and Go. It uses a large language model to perform the code conversions.
 
 ## Features
 
